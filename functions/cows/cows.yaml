@@ -1,0 +1,9 @@
+apiVersion: openfaas.com/v1
+kind: Function
+metadata:
+  name: showcow
+  namespace: openfaas-fn
+spec:
+  name: showcow
+  handler: node show_cow.js
+  image: alexellis2/ascii-cows-openfaas:0.1

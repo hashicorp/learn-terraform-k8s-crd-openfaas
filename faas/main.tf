@@ -1,9 +1,9 @@
 terraform {
   required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = ">= 3.20.0"
-    }
+#     aws = {
+#       source  = "hashicorp/aws"
+#       version = ">= 3.20.0"
+#     }
 
     kubernetes = {
       source  = "hashicorp/kubernetes"
@@ -12,37 +12,41 @@ terraform {
   }
 }
 
-data "terraform_remote_state" "eks" {
-  backend = "local"
+# data "terraform_remote_state" "eks" {
+#   backend = "local"
 
-  config = {
-    path = "../k8s-eks/terraform.tfstate"
+#   config = {
+#    path = "../k8s-eks/terraform.tfstate"
 #    path = "../../learn-terraform-provision-eks-cluster/terraform.tfstate"
-  }
-}
+#   }
+# }
 
 # Retrieve EKS cluster information
-provider "aws" {
-  region = data.terraform_remote_state.eks.outputs.aws_region
-}
+# provider "aws" {
+#   region = data.terraform_remote_state.eks.outputs.aws_region
+# }
 
-data "aws_eks_cluster" "cluster" {
-  name = data.terraform_remote_state.eks.outputs.cluster_id
-}
+# data "aws_eks_cluster" "cluster" {
+#   name = data.terraform_remote_state.eks.outputs.cluster_id
+# }
+
+# provider "kubernetes" {
+#   host                   = data.aws_eks_cluster.cluster.endpoint
+#   cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority.0.data)
+#   exec {
+#     api_version = "client.authentication.k8s.io/v1alpha1"
+#     command     = "aws"
+#     args = [
+#       "eks",
+#       "get-token",
+#       "--cluster-name",
+#       data.aws_eks_cluster.cluster.name
+#     ]
+#   }
+# }
 
 provider "kubernetes" {
-  host                   = data.aws_eks_cluster.cluster.endpoint
-  cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority.0.data)
-  exec {
-    api_version = "client.authentication.k8s.io/v1alpha1"
-    command     = "aws"
-    args = [
-      "eks",
-      "get-token",
-      "--cluster-name",
-      data.aws_eks_cluster.cluster.name
-    ]
-  }
+  config_path = var.kubeconfig_path
 }
 
 resource "kubernetes_namespace" "openfaas" {
@@ -75,18 +79,8 @@ resource "kubernetes_namespace" "openfaas-fn" {
 
 provider "helm" {
   kubernetes {
-    host                   = data.aws_eks_cluster.cluster.endpoint
-    cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority.0.data)
-    exec {
-      api_version = "client.authentication.k8s.io/v1alpha1"
-      command     = "aws"
-      args = [
-        "eks",
-        "get-token",
-        "--cluster-name",
-        data.aws_eks_cluster.cluster.name
-      ]
-    }
+    config_path = var.kubeconfig_path
+
   }
 }
 
@@ -129,3 +123,44 @@ resource "helm_release" "openfaas" {
     value = "true"
   }
 }
+
+# Configuration for docker registry is something like the below...
+
+# resource "kubernetes_secret" "docker_registry" {
+#   metadata {
+#     name = "docker-cfg"
+#   }
+
+#   data = {
+#     ".dockerconfigjson" = <<DOCKER
+# {
+#   "auths": {
+#     "127.0.0.1:5000": {
+#       "auth": "${base64encode("admin:password")}"
+#    }
+#  }
+# }
+# DOCKER
+#  }
+
+#  type = "kubernetes.io/dockerconfigjson"
+#}
+
+#resource "helm_release" "docker_registry" {
+#  repository = "https://helm.twun.io"
+#  chart = "docker-registry"
+#  name = "docker-registry"
+#  namespace = "openfaas"
+
+#  depends_on = [time_sleep.wait_30_seconds]
+
+#  set {
+#    name = "ingress.enabled"
+#    value = "true"
+#  }
+
+#  set {
+#    name = "imagePullSecrets"
+#    value = "docker-cfg" # FIXME: Needs to be an array?
+#  }
+#}
