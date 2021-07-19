@@ -122,11 +122,6 @@ resource "helm_release" "openfaas" {
     name = "generateBasicAuth"
     value = "true"
   }
-
-  set {
-    name = "ingress.enabled"
-    value = "true"
-  }
 }
 
 # Configuration for docker registry is something like the below...
