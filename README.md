@@ -26,20 +26,12 @@ $ kind create cluster --name openfaas
 
 ### Verify the cluster
 
-Probably skip?
-
 ```sh
 $ kind get clusters
 openfaas
-$ kind get nodes --name openfaas
-openfaas-control-plane
 $ kind get kubeconfig --name openfaas > openfaas-kubeconfig
 $ export KUBECONFIG="$(pwd)/openfaas-kubeconfig"
-$ kubectl cluster-info
-Kubernetes master is running at https://127.0.0.1:52800
-CoreDNS is running at https://127.0.0.1:52800/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
-
-To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
+$ kubectl cluster-info --context openfaas
 ```
 
 ## Deploy OpenFaaS on Kubernetes with Helm
@@ -48,7 +40,7 @@ This installs OpenFaaS, as well as the OpenFaaS CRDs.
 
 ```sh
 $ cd faas
-$ kind get kubeconfig --name openfaas > openfaas-kubeconfig
+$ kubectl config view --raw --output go-template-file=../cluster.tfvars.gotemplate > terraform.tfvars
 $ terraform init
 $ terraform apply
 ```
@@ -76,19 +68,26 @@ $ kubectl describe crds/functions.openfaas.com
 
 ### Forward OpenFaaS API gateway
 
-The OpenFaaS gateway allows us to call OpenFaaS functions.
+The OpenFaaS gateway allows you to call OpenFaaS functions over HTTP.
 
 ```sh
-$ kubectl port-forward svc/gateway -n openfaas 8080:8080 &
+$ kubectl port-forward svc/gateway -n openfaas 8080:8080
 ```
 
-Running it in the background means you don't have to switch tabs, but log messages get mixed into output, which might be confusing.
+Now, open a new terminal window, change to the top-level
+'learn-terraform-k8s-faas-crd' directory, and set up KUBECONFIG again.
+
+```sh
+$ export KUBECONFIG="$(pwd)/openfaas-kubeconfig"
+```
 
 ## Deploy the nodeinfo openFaaS function
 
+NOTE: Probably skipping this, as the next example covers the same things.
+
 ```sh
-$ cd ../functions/nodeinfo
-$ kind get kubeconfig --name openfaas > openfaas-kubeconfig
+$ cd functions/nodeinfo
+$ kubectl config view --raw --output go-template-file=../../cluster.tfvars.gotemplate > terraform.tfvars
 $ terraform init
 $ terraform apply
 ```
@@ -111,7 +110,9 @@ Uptime: 46783
 ## Create manifest for openFaaS function
 
 ```sh
-$ cd ../cows
+$ cd functions/cows
+$ kubectl config view --raw --output go-template-file=../../cluster.tfvars.gotemplate > terraform.tfvars
+$ terraform init
 ```
 
 Review `cows.yaml`. Convert it to an HCL manifest.
@@ -120,8 +121,8 @@ Review `cows.yaml`. Convert it to an HCL manifest.
 $ echo 'yamldecode(file("cows.yaml"))' | terraform console
 ```
 
-Add a `kubernetest_manifest` resource for the showcow function. Pasted manifest
-will not be formatted correctly.
+Add a `kubernetest_manifest` resource for the showcow function. The pasted
+manifest will not be formatted correctly.
 
 ```hcl
 resource "kubernetes_manifest" "openfaas_fn_showcow" {
@@ -160,36 +161,111 @@ Generate a random ASCII Cow.
 
 ```sh
 $ curl http://127.0.0.1:8080/function/showcow
-          (__)
-    _____| oo |
-   /          |
-  /           |
- /____________|
-    ^^    ^^
-Cow dressed up
-  as ghost
-for Halloween
+  (__) |  (__) |  (__) |  (__) |  (__) |  (__) |
+  ( oo |  ( oo |  ( oo |  ( oo |  ( oo |  ( oo |
+  /\_| |  /\_| |  /\_| |  /\_| |  /\_| |  /\_| |
+-------------------------------------------------
+  (__) |  (__) |  (__) |  (__) |  (__) |  (__) |
+  ( oo |  ( oo |  ( oo |  ( oo |  ( oo |  ( oo |
+  /\_| |  /\_| |  /\_| |  /\_| |  /\_| |  /\_| |
+-------------------------------------------------
+  (__) |  (__) |  (__) |  (__) |  (__) |  (__) |
+  ( oo |  ( oo |  ( oo |  ( oo |  ( oo |  ( oo |
+  /\_| |  /\_| |  /\_| |  /\_| |  /\_| |  /\_| |
+-------------------------------------------------
+  (__) |  (__) |  (__) |  (__) |  (__) |  (__) |
+  ( oo |  ( oo |  ( oo |  ( oo |  ( oo |  ( oo |
+  /\_| |  /\_| |  /\_| |  /\_| |  /\_| |  /\_| |
+-------------------------------------------------
+              Andy Warhol Cow
+```
+
+### List OpenFaaS function Pods
+
+```sh
+$ kubectl get pods --namespace openfaas-fn
+NAME                       READY   STATUS    RESTARTS   AGE
+showcow-845ff7bdcc-7cq2x   1/1     Running   0          11m
+```
+
+### Configure Cows function
+
+Add configuration to the `openfaas_fn_showcow` resource to manage scaling and limits.
+
+```sh
+  resource "kubernetes_manifest" "openfaas_fn_showcow" {
+    provider = kubernetes-alpha
+
+    manifest = {
+      "apiVersion" = "openfaas.com/v1"
+      "kind"       = "Function"
+      "metadata" = {
+        "name"      = "showcow"
+        "namespace" = "openfaas-fn"
+      }
+      "spec" = {
+        "handler" = "node show_cow.js"
+        "image"   = "alexellis2/ascii-cows-openfaas:0.1"
+        "name"    = "showcow"
++        "labels" = {
++          "com.openfaas.scale.max" = "6"
++          "com.openfaas.scale.min" = "4"
++        }
++        "limits" = {
++          "cpu" = "100m"
++          "memory" = "64Mi"
++        }
+      }
+    }
+  }
+```
+
+Apply the new configuration.
+
+```sh
+$ terraform apply
+```
+
+List pods.
+
+```sh
+$ kubectl get pods --namespace openfaas-fn
+NAME                       READY   STATUS    RESTARTS   AGE
+showcow-758b5649f4-6r8nz   1/1     Running   0          7m3s
+showcow-758b5649f4-9f8bv   1/1     Running   0          6m53s
+showcow-758b5649f4-mv89c   1/1     Running   0          6m57s
+showcow-758b5649f4-qgdw9   1/1     Running   0          6m49s
+```
+
+It may take a few minutes for the old pod to be Terminated and the new ones to become available.
+
+More cows.
+
+```sh
+$ curl http://127.0.0.1:8080/function/showcow
+    ___                 __  __
+   (( /\   (__)        ( /\/ \(__)
+    \\ /\  (oo)         \ /\\/(oo)
+ ,----\ /\--\/      ,----\ /\--\/
+( ) ) ) // ||      ( ) ) ) // ||
+ `-----//--||       `-----//--||
+      ^^   ^^            ^^   ^^
+              beecows
 ```
 
 ## Cleanup
 
 (Currently in `learn-terraform-k8s-faas-crd/functions/cows`).
 
-- Should we have them destroy the functions & openfaas, since they can just `kind delete` instead?
+Switch to the terminal window running the 'kubectl port-forward' command, and press <ctrl-c> to cancel it.
 
 ```sh
-$ fg
-kubectl port-forward svc/gateway -n openfaas 8080:8080	(wd: ~/code/learn-terraform-k8s-faas-crd/functions/nodeinfo)
-<ctrl-c>
 $ terraform destroy
-$ cd ../nodeinfo
-$ terraform destroy
-$ cd ../../openfaas
+$ cd ../../faas
 $ terraform destroy
 $ cd ..
 $ kind delete cluster --name openfaas
 ```
-
 
 ## Create an OpenFaaS function
 
