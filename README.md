@@ -280,6 +280,8 @@ Requires:
 ### Private docker registry
 
 https://ericstoekl.github.io/faas/operations/managing-images/
+or
+https://medium.com/twodigits/setup-openfaas-on-k3s-with-local-docker-registry-7a84ebb54a6f
 
 ### Install OpenFaaS CLI
 
