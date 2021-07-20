@@ -267,16 +267,19 @@ $ cd ..
 $ kind delete cluster --name openfaas
 ```
 
+
 ## Create an OpenFaaS function
 
-NOTE: Probably out of scope - requires:
+NOTE: Probably out of scope for the tutorial.
+
+Requires:
 
 - Either an account with docker hub, or setting up a private docker registry.
 - OpenFaaS CLI
 
 ### Private docker registry
 
-Currently commented out in `faas/main.tf`. Doesn't work yet because I 
+https://ericstoekl.github.io/faas/operations/managing-images/
 
 ### Install OpenFaaS CLI
 
