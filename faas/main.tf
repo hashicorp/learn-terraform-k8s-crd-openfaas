@@ -88,12 +88,12 @@ resource "helm_release" "openfaas" {
   }
 
   set {
-    name  = "operator.create"
+    name  = "generateBasicAuth"
     value = "true"
   }
 
   set {
-    name  = "generateBasicAuth"
+    name  = "operator.create"
     value = "true"
   }
 }
