@@ -1,13 +1,17 @@
 terraform {
   required_providers {
-    kubernetes-alpha = {
-      source  = "hashicorp/kubernetes-alpha"
-      version = "0.5.0"
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 2.4.0"
     }
   }
 }
 
-provider "kubernetes-alpha" {
+provider "kubernetes" {
+  experiments {
+    manifest_resource = true
+  }
+
   host = var.k8s_host
 
   client_certificate     = base64decode(var.k8s_client_certificate)
