@@ -44,6 +44,7 @@ resource "kubernetes_namespace" "openfaas-fn" {
   lifecycle {
     ignore_changes = [metadata]
   }
+
   metadata {
     name = "openfaas-fn"
     labels = {
