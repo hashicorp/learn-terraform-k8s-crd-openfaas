@@ -64,10 +64,12 @@ provider "helm" {
   }
 }
 
-# Need to wait a few seconds when removing the openfaas resource to give helm time to finish cleaning up.
+# Need to wait a few seconds when removing the openfaas resource to give helm
+# time to finish cleaning up.
 #
 # Otherwise, after `terraform destroy`:
-# │ Error: uninstallation completed with 1 error(s): uninstall: Failed to purge the release: release: not found
+# │ Error: uninstallation completed with 1 error(s): uninstall: Failed to purge
+#   the release: release: not found
 
 resource "time_sleep" "wait_30_seconds" {
   depends_on = [kubernetes_namespace.openfaas]
