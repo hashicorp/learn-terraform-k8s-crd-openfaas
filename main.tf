@@ -17,12 +17,12 @@ terraform {
   }
 }
 
-provider "kubernetes" {
-  host = var.k8s_host
+locals {
+  config_path = "~/.kube/config"
+}
 
-  client_certificate     = base64decode(var.k8s_client_certificate)
-  client_key             = base64decode(var.k8s_client_key)
-  cluster_ca_certificate = base64decode(var.k8s_cluster_ca_certificate)
+provider "kubernetes" {
+  config_path = local.config_path
 }
 
 resource "kubernetes_namespace" "openfaas" {
@@ -56,11 +56,7 @@ resource "kubernetes_namespace" "openfaas-fn" {
 
 provider "helm" {
   kubernetes {
-    host = var.k8s_host
-
-    client_certificate     = base64decode(var.k8s_client_certificate)
-    client_key             = base64decode(var.k8s_client_key)
-    cluster_ca_certificate = base64decode(var.k8s_cluster_ca_certificate)
+    config_path = local.config_path
   }
 }
 
