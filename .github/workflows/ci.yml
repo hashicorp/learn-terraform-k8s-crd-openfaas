@@ -43,16 +43,22 @@ jobs:
 
       - name: kubectl status
         run: |
-          kubectl config set-context kind-openfaas --namespace namespace=openfaas
-          #kubectl cluster-info
-          kubectl describe crds/functions.openfaas.com
-          kubectl get deployments --namespace=openfaas
-          
+          kubectl config set-context kind-openfaas --namespace openfaas
+          #kubectl describe crds/functions.openfaas.com
+          kubectl get deployments
+
+          kubectl get functions
+          kubectl get svc gateway-external -o wide
+
           kubectl -n openfaas-fn wait --for=condition=Ready pods --timeout=300s --all
-          kubectl get pods --namespace=openfaas-fn
+          kubectl -n openfaas-fn get pods
 
       - name: Test service URLs
         run: |
           PORT=8080
-          CLUSTER_IP=$(kubectl -n openfaas-fn get svc showcow --output='jsonpath={.spec.clusterIP}')
+          SVC=showcow
+          NS=openfaas-fn
+          CLUSTER_IP=$(kubectl -n $NS get svc $SVC --output='jsonpath={.spec.clusterIP}')
           kubectl run -i --rm --image=curlimages/curl --restart=Never test-curl -- -sSL http://$CLUSTER_IP:$PORT
+          sleep 3
+          kubectl get pods --namespace=openfaas-fn
