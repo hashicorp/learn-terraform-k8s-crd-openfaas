@@ -82,6 +82,7 @@ resource "helm_release" "openfaas" {
   chart     = "${path.module}/faas-netes/chart/openfaas"
   name       = "openfaas"
   namespace  = "openfaas"
+  timeout    = 600
 
   depends_on = [time_sleep.wait_30_seconds]
 
