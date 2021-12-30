@@ -47,11 +47,12 @@ jobs:
           #kubectl cluster-info
           kubectl describe crds/functions.openfaas.com
           kubectl get deployments --namespace=openfaas
+          
+          kubectl -n openfaas-fn wait --for=condition=Ready pods --timeout=300s --all
           kubectl get pods --namespace=openfaas-fn
 
       - name: Test service URLs
         run: |
-          SVC=showcow
           PORT=8080
-          CLUSTER_IP=$(kubectl -n openfaas-fn get svc "$SVC" --output='jsonpath={.spec.clusterIP}')
+          CLUSTER_IP=$(kubectl -n openfaas-fn get svc showcow --output='jsonpath={.spec.clusterIP}')
           kubectl run -i --rm --image=curlimages/curl --restart=Never test-curl -- -sSL http://$CLUSTER_IP:$PORT
