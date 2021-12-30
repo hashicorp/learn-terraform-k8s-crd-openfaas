@@ -102,6 +102,6 @@ resource "helm_release" "openfaas" {
     create = "45m"
     update = "45m"
     delete = "45m"
-  */
   }
+  */
 }
