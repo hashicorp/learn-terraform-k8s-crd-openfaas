@@ -41,10 +41,19 @@ jobs:
       - name: Terraform Apply
         run: terraform apply -auto-approve
 
-      - name: kubectl
+      - name: kubectl status
         run: |
           echo
-          kubectl cluster-info --context=kind-openfaas
-          kubectl get deployments --context=kind-openfaas --namespace=openfaas
-          kubectl describe crds/functions.openfaas.com --context=kind-openfaas
-          kubectl get pods --context=kind-openfaas --namespace=openfaas-fn
+          kubectl config set-context kind-openfaas --namespace namespace=openfaas
+          #kubectl cluster-info
+          kubectl describe crds/functions.openfaas.com
+          kubectl get deployments --namespace=openfaas
+          kubectl get pods --namespace=openfaas-fn
+
+      - name: Test service URLs
+        run: |
+          NS=openfaas-fn
+          SVC=showcow
+          PORT=8080
+          CLUSTER_IP=$(kubectl --namespace=$NS get svc $SVC --output='jsonpath={.spec.clusterIP}')
+          kubectl run -i --rm --image=curlimages/curl --restart=Never test-curl -- -sSL http://$CLUSTER_IP:$PORT

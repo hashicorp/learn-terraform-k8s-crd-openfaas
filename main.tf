@@ -2,12 +2,12 @@ terraform {
   required_providers {
     kubernetes = {
       source  = "hashicorp/kubernetes"
-      version = "~> 2.6.1"
+      version = "~> 2.7.1"
     }
 
     helm = {
       source  = "hashicorp/helm"
-      version = "~> 2.2.0"
+      version = "~> 2.4.1"
     }
 
     time = {
@@ -83,11 +83,9 @@ resource "helm_release" "openfaas" {
   name      = "openfaas"
   namespace = "openfaas"
 
-  timeout          = 300
-  disable_webhooks = true
-
   depends_on = [time_sleep.wait_30_seconds]
 
+  ## helm show values openfaas/openfaas
   set {
     name  = "functionNamepsace"
     value = "openfaas-fn"
@@ -103,12 +101,15 @@ resource "helm_release" "openfaas" {
     value = "true"
   }
 
-  // Most resource types do not support the timeouts block at all.
-  /*
-  timeouts {
-    create = "45m"
-    update = "45m"
-    delete = "45m"
+  set {
+    name  = "openfaasPRO"
+    value = "false"
   }
-  */
+
+  timeout         = 100
+  force_update    = true
+  recreate_pods   = true
+  cleanup_on_fail = true
+  #disable_webhooks = true
+  #wait             = false
 }
