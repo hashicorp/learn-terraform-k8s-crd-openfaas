@@ -96,9 +96,12 @@ resource "helm_release" "openfaas" {
     value = "true"
   }
 
+  // Most resource types do not support the timeouts block at all.
+  /*
   timeouts {
     create = "45m"
     update = "45m"
     delete = "45m"
+  */
   }
 }
