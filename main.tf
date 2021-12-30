@@ -79,8 +79,7 @@ resource "time_sleep" "wait_30_seconds" {
 }
 
 resource "helm_release" "openfaas" {
-  repository = "https://openfaas.github.io/faas-netes"
-  chart      = "openfaas"
+  chart     = "${path.module}/faas-netes/chart/openfaas"
   name       = "openfaas"
   namespace  = "openfaas"
 
