@@ -95,4 +95,10 @@ resource "helm_release" "openfaas" {
     name  = "operator.create"
     value = "true"
   }
+
+  timeouts {
+    create = "45m"
+    update = "45m"
+    delete = "45m"
+  }
 }

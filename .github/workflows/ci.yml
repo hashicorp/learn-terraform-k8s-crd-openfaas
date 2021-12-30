@@ -44,3 +44,4 @@ jobs:
           kubectl cluster-info --context=kind-openfaas
           kubectl get deployments --context=kind-openfaas --namespace=openfaas
           kubectl describe crds/functions.openfaas.com --context=kind-openfaas
+          kubectl get pods --context=kind-openfaas --namespace=openfaas-fn
