@@ -43,7 +43,6 @@ jobs:
 
       - name: kubectl status
         run: |
-          echo
           kubectl config set-context kind-openfaas --namespace namespace=openfaas
           #kubectl cluster-info
           kubectl describe crds/functions.openfaas.com
@@ -55,5 +54,5 @@ jobs:
           NS=openfaas-fn
           SVC=showcow
           PORT=8080
-          CLUSTER_IP=$(kubectl --namespace=$NS get svc $SVC --output='jsonpath={.spec.clusterIP}')
+          CLUSTER_IP=$(kubectl -n "$NS" get svc "$SVC" --output='jsonpath={.spec.clusterIP}')
           kubectl run -i --rm --image=curlimages/curl --restart=Never test-curl -- -sSL http://$CLUSTER_IP:$PORT
