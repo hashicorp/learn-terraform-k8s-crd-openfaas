@@ -51,8 +51,7 @@ jobs:
 
       - name: Test service URLs
         run: |
-          NS="openfaas-fn"
-          SVC="showcow"
-          PORT="8080"
-          CLUSTER_IP=$(kubectl -n "$NS" get svc "$SVC" --output='jsonpath={.spec.clusterIP}')
+          SVC=showcow
+          PORT=8080
+          CLUSTER_IP=$(kubectl -n openfaas-fn get svc "$SVC" --output='jsonpath={.spec.clusterIP}')
           kubectl run -i --rm --image=curlimages/curl --restart=Never test-curl -- -sSL http://$CLUSTER_IP:$PORT
