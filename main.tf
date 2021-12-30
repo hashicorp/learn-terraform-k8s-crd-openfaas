@@ -80,9 +80,11 @@ resource "time_sleep" "wait_30_seconds" {
 
 resource "helm_release" "openfaas" {
   chart     = "${path.module}/faas-netes/chart/openfaas"
-  name       = "openfaas"
-  namespace  = "openfaas"
-  timeout    = 600
+  name      = "openfaas"
+  namespace = "openfaas"
+
+  timeout          = 300
+  disable_webhooks = true
 
   depends_on = [time_sleep.wait_30_seconds]
 
