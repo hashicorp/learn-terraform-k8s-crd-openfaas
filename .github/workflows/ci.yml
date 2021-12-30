@@ -4,7 +4,7 @@ on:
   push:
 
 jobs:
-  terraform:
+  ci:
     runs-on: ubuntu-latest
     steps:
       - name: Create k8s Kind Cluster
