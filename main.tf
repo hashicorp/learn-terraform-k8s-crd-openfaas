@@ -110,6 +110,4 @@ resource "helm_release" "openfaas" {
   force_update    = true
   recreate_pods   = true
   cleanup_on_fail = true
-  #disable_webhooks = true
-  #wait             = false
 }
