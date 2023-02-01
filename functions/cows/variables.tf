@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 variable "k8s_host" {
   description = "The hostname (in form of URI) of the Kubernetes API."
   type        = string
